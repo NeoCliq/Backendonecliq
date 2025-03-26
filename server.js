@@ -31,22 +31,6 @@ app.post("/register", async (req, res) => {
   const { email, password, name, phone } = req.body;
 
   try {
-    // Verificar se o usuário já está registrado no Supabase Auth
-    const { data: existingAuthUser, error: authCheckError } =
-      await supabase.auth.admin.listUsers({
-        email,
-      });
-
-    if (authCheckError) {
-      throw authCheckError;
-    }
-
-    if (existingAuthUser.users.length > 0) {
-      return res
-        .status(400)
-        .json({ error: "Usuário já cadastrado no sistema." });
-    }
-
     // Criar usuário no Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -54,7 +38,8 @@ app.post("/register", async (req, res) => {
     });
 
     if (authError) {
-      throw authError;
+      // Se o erro indicar duplicação, você pode tratar aqui
+      return res.status(400).json({ error: authError.message });
     }
 
     const userId = authData.user?.id; // Verifica se o ID existe
@@ -67,14 +52,14 @@ app.post("/register", async (req, res) => {
     const { data: existingUsers, error: userCheckError } = await supabase
       .from("users")
       .select("id")
-      .eq("id", userId) // Removemos .single()
+      .eq("id", userId)
       .maybeSingle();
 
     if (userCheckError) {
       throw userCheckError;
     }
 
-    // Se já existe pelo menos um usuário com esse ID, retorna erro
+    // Se já existe o usuário, retorna erro
     if (existingUsers) {
       return res
         .status(400)
