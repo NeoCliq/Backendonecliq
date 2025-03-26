@@ -95,3 +95,56 @@ app.listen(PORT, () => {
 app.get("/", (req, res) => {
   res.send("API rodando...");
 });
+
+// Adicione estas rotas após suas rotas de /login e /register
+
+// Endpoint para obter os dados do perfil do usuário
+// Exemplo: GET https://backen-neocliq.onrender.com/profile?email=exemplo@dominio.com
+app.get("/profile", async (req, res) => {
+  const { email } = req.query;
+  if (!email) {
+    return res.status(400).json({ error: "Email is required" });
+  }
+
+  // Busca o usuário na tabela 'users'
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("email", email)
+    .single(); // Espera exatamente um resultado
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json(data);
+});
+
+// Endpoint para atualizar os dados do perfil do usuário
+// Exemplo: PUT https://backen-neocliq.onrender.com/profile
+// Corpo (JSON):
+// {
+//    "email": "exemplo@dominio.com",
+//    "nome": "Nome atualizado",
+//    "telefone": "11999999999",
+//    "dataNascimento": "1990-01-01",
+//    "foto": "data:image/png;base64,iVBORw0KGgoAAAANS..."
+// }
+app.put("/profile", async (req, res) => {
+  const { email, nome, telefone, dataNascimento, foto } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: "Email is required" });
+  }
+
+  // Atualiza as informações do usuário na tabela 'users'
+  const { data, error } = await supabase
+    .from("users")
+    .update({ nome, telefone, dataNascimento, foto })
+    .eq("email", email);
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json({ message: "Profile updated successfully", data });
+});
