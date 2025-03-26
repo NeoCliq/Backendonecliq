@@ -4,7 +4,7 @@ const cors = require("cors");
 const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 const supabase = createClient(
@@ -132,19 +132,44 @@ app.get("/profile", async (req, res) => {
 // }
 app.put("/profile", async (req, res) => {
   const { email, nome, telefone, dataNascimento, foto } = req.body;
+
   if (!email) {
-    return res.status(400).json({ error: "Email is required" });
+    return res.status(400).json({ error: "Email é obrigatório" });
   }
 
-  // Atualiza as informações do usuário na tabela 'users'
-  const { data, error } = await supabase
-    .from("users")
-    .update({ nome, telefone, dataNascimento, foto })
-    .eq("email", email);
+  try {
+    console.log(`Buscando usuário com email: ${email}`);
 
-  if (error) {
-    return res.status(500).json({ error: error.message });
+    // Verifica se o usuário existe
+    const { data: existingUser, error: userCheckError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", email)
+      .single();
+
+    if (userCheckError) {
+      console.error("Erro ao buscar usuário:", userCheckError);
+      return res.status(500).json({ error: userCheckError.message });
+    }
+
+    if (!existingUser) {
+      return res.status(404).json({ error: "Usuário não encontrado" });
+    }
+
+    // Atualiza os dados do usuário
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({ name, phone, dataNascimento, foto })
+      .eq("email", email);
+
+    if (updateError) {
+      console.error("Erro ao atualizar perfil:", updateError);
+      return res.status(500).json({ error: updateError.message });
+    }
+
+    res.json({ message: "Perfil atualizado com sucesso!" });
+  } catch (err) {
+    console.error("Erro inesperado:", err);
+    res.status(500).json({ error: "Erro interno do servidor" });
   }
-
-  res.json({ message: "Profile updated successfully", data });
 });
