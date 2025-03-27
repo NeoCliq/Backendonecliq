@@ -131,45 +131,36 @@ app.get("/profile", async (req, res) => {
 //    "foto": "data:image/png;base64,iVBORw0KGgoAAAANS..."
 // }
 app.put("/profile", async (req, res) => {
-  const { email, nome, telefone, dataNascimento, foto } = req.body;
+  const { email, name, phone, dataNascimento, foto } = req.body;
 
   if (!email) {
     return res.status(400).json({ error: "Email é obrigatório" });
   }
 
-  try {
-    console.log(`Buscando usuário com email: ${email}`);
+  console.log(`Buscando usuário com email: ${email}`);
 
-    // Verifica se o usuário existe
-    const { data: existingUser, error: userCheckError } = await supabase
-      .from("users")
-      .select("id")
-      .eq("email", email)
-      .single();
+  // Verifica se o usuário existe
+  const { data: user, error: userError } = await supabase
+    .from("users")
+    .select("id")
+    .eq("email", email)
+    .single();
 
-    if (userCheckError) {
-      console.error("Erro ao buscar usuário:", userCheckError);
-      return res.status(500).json({ error: userCheckError.message });
-    }
-
-    if (!existingUser) {
-      return res.status(404).json({ error: "Usuário não encontrado" });
-    }
-
-    // Atualiza os dados do usuário
-    const { error: updateError } = await supabase
-      .from("users")
-      .update({ name, phone, dataNascimento, foto })
-      .eq("email", email);
-
-    if (updateError) {
-      console.error("Erro ao atualizar perfil:", updateError);
-      return res.status(500).json({ error: updateError.message });
-    }
-
-    res.json({ message: "Perfil atualizado com sucesso!" });
-  } catch (err) {
-    console.error("Erro inesperado:", err);
-    res.status(500).json({ error: "Erro interno do servidor" });
+  if (userError || !user) {
+    console.error("Usuário não encontrado:", userError);
+    return res.status(404).json({ error: "Usuário não encontrado" });
   }
+
+  // Atualiza os dados
+  const { error } = await supabase
+    .from("users")
+    .update({ name, phone, dataNascimento, foto })
+    .eq("email", email);
+
+  if (error) {
+    console.error("Erro ao atualizar perfil:", error);
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json({ message: "Perfil atualizado com sucesso!" });
 });
