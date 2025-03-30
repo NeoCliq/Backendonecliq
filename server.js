@@ -120,6 +120,60 @@ app.get("/profile", async (req, res) => {
   res.json(data);
 });
 
+//
+//
+//
+//
+//
+//
+//
+//cadastro empresa
+// Endpoint para cadastro de empresa
+app.post("/cadastrar-empresa", async (req, res) => {
+  const {
+    nome,
+    categoria,
+    descricao,
+    endereco,
+    cidade,
+    bairro,
+    telefone,
+    email,
+    atendimento,
+    politica_cancelamento,
+  } = req.body;
+
+  try {
+    // Inserir empresa na tabela 'entidades'
+    const { data, error } = await supabase.from("entidades").insert([
+      {
+        nome,
+        categoria,
+        descricao,
+        endereco,
+        cidade,
+        bairro,
+        telefone,
+        email,
+        forma_atendimento: atendimento,
+        politica_cancelamento,
+        tipo: "empresa", // Garantir que seja do tipo 'empresa'
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    ]);
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    res.status(201).json({ message: "Empresa cadastrada com sucesso!", data });
+  } catch (err) {
+    console.error("Erro ao cadastrar empresa:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Endpoint para atualizar os dados do perfil do usuário
 // Exemplo: PUT https://backen-neocliq.onrender.com/profile
 // Corpo (JSON):
