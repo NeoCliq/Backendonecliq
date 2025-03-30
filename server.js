@@ -143,18 +143,29 @@ app.post("/cadastrar-empresa", async (req, res) => {
     email,
     atendimento,
     politica_cancelamento,
-    senha, // Adicionando o campo senha
+    senha, // Senha fornecida pelo frontend
   } = req.body;
 
-  if (!senha) {
-    return res.status(400).json({ error: "Senha é obrigatória." });
-  }
-
   try {
-    // Criptografando a senha com bcrypt
-    const hashedPassword = await bcrypt.hash(senha, 10); // 10 é o número de "salt rounds"
+    // Cadastrar usuário no Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password: senha,
+    });
 
-    // Inserir empresa na tabela 'entidades'
+    // Verifica se houve erro ao criar o usuário
+    if (authError) {
+      return res.status(400).json({ error: authError.message });
+    }
+
+    const userId = authData.user?.id; // ID do usuário criado
+
+    // Se o ID do usuário não for encontrado, retornar erro
+    if (!userId) {
+      return res.status(400).json({ error: "Erro ao obter ID do usuário." });
+    }
+
+    // Inserir empresa na tabela 'entidades' associando com o userId
     const { data, error } = await supabase.from("entidades").insert([
       {
         nome,
@@ -168,7 +179,7 @@ app.post("/cadastrar-empresa", async (req, res) => {
         forma_atendimento: atendimento,
         politica_cancelamento,
         tipo: "empresa", // Garantir que seja do tipo 'empresa'
-        senha: hashedPassword, // Armazenando a senha criptografada
+        user_id: userId, // Associando a empresa ao usuário criado
         created_at: new Date(),
         updated_at: new Date(),
       },
