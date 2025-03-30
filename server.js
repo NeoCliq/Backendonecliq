@@ -129,6 +129,8 @@ app.get("/profile", async (req, res) => {
 //
 //cadastro empresa
 // Endpoint para cadastro de empresa
+
+// Endpoint para cadastro de empresa com senha
 app.post("/cadastrar-empresa", async (req, res) => {
   const {
     nome,
@@ -141,9 +143,17 @@ app.post("/cadastrar-empresa", async (req, res) => {
     email,
     atendimento,
     politica_cancelamento,
+    senha, // Adicionando o campo senha
   } = req.body;
 
+  if (!senha) {
+    return res.status(400).json({ error: "Senha é obrigatória." });
+  }
+
   try {
+    // Criptografando a senha com bcrypt
+    const hashedPassword = await bcrypt.hash(senha, 10); // 10 é o número de "salt rounds"
+
     // Inserir empresa na tabela 'entidades'
     const { data, error } = await supabase.from("entidades").insert([
       {
@@ -158,6 +168,7 @@ app.post("/cadastrar-empresa", async (req, res) => {
         forma_atendimento: atendimento,
         politica_cancelamento,
         tipo: "empresa", // Garantir que seja do tipo 'empresa'
+        senha: hashedPassword, // Armazenando a senha criptografada
         created_at: new Date(),
         updated_at: new Date(),
       },
