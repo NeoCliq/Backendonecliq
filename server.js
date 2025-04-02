@@ -240,3 +240,101 @@ app.put("/profile", async (req, res) => {
 
   res.json({ message: "Perfil atualizado com sucesso!" });
 });
+
+///////
+//
+//
+//
+//
+//
+//agendamento
+// Endpoint para criar um agendamento
+app.post("/agendar", async (req, res) => {
+  const {
+    user_id, // ID do usuário (deve ser fornecido ou obtido)
+    entidades_id, // ID da entidade
+    nome,
+    email,
+    telefone,
+    appointment_date, // Data do agendamento
+    appointment_time, // Hora do agendamento
+    selected_services, // Serviços selecionados
+  } = req.body;
+
+  try {
+    // Inserir o agendamento na tabela 'appointments'
+    const { data, error } = await supabase.from("appointments").insert([
+      {
+        user_id,
+        entidades_id,
+        appointment_date,
+        appointment_time,
+        status: "pendente", // Status inicial pode ser "pendente"
+        nome,
+        email,
+        telefone,
+        payment_method: null, // Se necessário, pode ser modificado
+        created_at: new Date().toISOString(),
+      },
+    ]);
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    // Retornar sucesso
+    res
+      .status(201)
+      .json({ message: "Agendamento realizado com sucesso!", data });
+  } catch (err) {
+    console.error("Erro ao criar agendamento:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+///////
+////
+///
+// Endpoint para receber e armazenar os serviços selecionados
+app.post("/servicos", async (req, res) => {
+  const { email, serviços } = req.body;
+
+  // Verifica se o email e os serviços foram passados corretamente
+  if (!email || !Array.isArray(serviços)) {
+    return res.status(400).json({ error: "Dados inválidos." });
+  }
+
+  try {
+    // Busca o ID do usuário no banco com base no email
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", email)
+      .single();
+
+    if (userError || !user) {
+      return res.status(404).json({ error: "Usuário não encontrado." });
+    }
+
+    const userId = user.id;
+
+    // Salvar os serviços selecionados na tabela correspondente (por exemplo, "servicos_selecionados")
+    const { error: dbError } = await supabase
+      .from("servicos_selecionados")
+      .insert(
+        serviços.map(servico => ({
+          user_id: userId,
+          servico_nome: servico,
+          created_at: new Date(),
+        }))
+      );
+
+    if (dbError) {
+      throw dbError;
+    }
+
+    res.status(201).json({ message: "Serviços registrados com sucesso!" });
+  } catch (error) {
+    console.error("Erro ao salvar os serviços:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
