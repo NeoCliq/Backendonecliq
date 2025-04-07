@@ -241,6 +241,47 @@ app.put("/profile", async (req, res) => {
   res.json({ message: "Perfil atualizado com sucesso!" });
 });
 
+const multer = require("multer");
+const upload = multer(); // armazena em memória (pode personalizar)
+
+// Rota para upload de imagem
+app.post("/upload-foto", upload.single("foto"), async (req, res) => {
+  const file = req.file;
+
+  if (!file) {
+    return res.status(400).json({ error: "Nenhum arquivo enviado." });
+  }
+
+  const fileName = `${Date.now()}-${file.originalname}`;
+  const filePath = `avatars/imagens/${fileName}`;
+
+  try {
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    const { data: publicData, error: urlError } = supabase.storage
+      .from("avatars")
+      .getPublicUrl(filePath);
+
+    if (urlError) {
+      throw urlError;
+    }
+
+    res.status(200).json({ publicUrl: publicData.publicUrl });
+  } catch (err) {
+    console.error("Erro ao fazer upload da imagem:", err.message);
+    res.status(500).json({ error: "Erro ao fazer upload da imagem." });
+  }
+});
+
 ///////
 //
 //
@@ -267,12 +308,10 @@ app.post("/agendar", async (req, res) => {
     !selected_services ||
     selected_services.length === 0
   ) {
-    return res
-      .status(400)
-      .json({
-        error:
-          "Dados inválidos. Certifique-se de fornecer todos os dados necessários.",
-      });
+    return res.status(400).json({
+      error:
+        "Dados inválidos. Certifique-se de fornecer todos os dados necessários.",
+    });
   }
 
   try {
