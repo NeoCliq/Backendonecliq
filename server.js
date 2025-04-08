@@ -61,18 +61,19 @@ app.post("/register", async (req, res) => {
     }
 
     if (existing) {
-      // Atualiza apenas o surname
+      // Atualiza name e surname se já existir
       const { error: updateError } = await supabase
         .from("users")
-        .update({ surname })
+        .update({ name, surname })
         .eq("id", userId);
 
       if (updateError) throw updateError;
     } else {
-      // Insere novo registro apenas com o surname
+      // Insere novo registro com name e surname
       const { error: insertError } = await supabase.from("users").insert([
         {
           id: userId,
+          name,
           surname,
           created_at: new Date(),
         },
