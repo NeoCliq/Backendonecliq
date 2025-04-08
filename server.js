@@ -28,27 +28,26 @@ app.post("/login", async (req, res) => {
 
 // Rota de cadastro
 app.post("/register", async (req, res) => {
-  const { email, password, name, phone } = req.body;
+  const { email, password, name, surname, phone } = req.body;
 
   try {
-    // Criar usuário no Supabase Auth
+    // Cria usuário no Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
     });
 
     if (authError) {
-      // Se o erro indicar duplicação, você pode tratar aqui
       return res.status(400).json({ error: authError.message });
     }
 
-    const userId = authData.user?.id; // Verifica se o ID existe
+    const userId = authData.user?.id;
 
     if (!userId) {
       return res.status(400).json({ error: "Erro ao obter ID do usuário." });
     }
 
-    // Verificar se o usuário já existe na tabela 'users'
+    // Verifica se usuário já existe na tabela 'users'
     const { data: existingUsers, error: userCheckError } = await supabase
       .from("users")
       .select("id")
@@ -59,18 +58,18 @@ app.post("/register", async (req, res) => {
       throw userCheckError;
     }
 
-    // Se já existe o usuário, retorna erro
     if (existingUsers) {
       return res
         .status(400)
         .json({ error: "Usuário já existe na tabela 'users'." });
     }
 
-    // Inserir usuário na tabela 'users'
+    // Insere na tabela 'users'
     const { error: dbError } = await supabase.from("users").insert([
       {
-        id: userId, // ID do usuário autenticado
+        id: userId,
         name,
+        surname, // <-- novo campo adicionado
         phone,
         email,
         created_at: new Date(),
