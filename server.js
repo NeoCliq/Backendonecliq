@@ -28,10 +28,10 @@ app.post("/login", async (req, res) => {
 
 // Rota de cadastro
 app.post("/register", async (req, res) => {
-  const { email, password, name, surname, phone } = req.body;
+  const { email, password, name, surname } = req.body;
 
   try {
-    // Cria usuário no Supabase Auth
+    // Cria o usuário no Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -47,37 +47,17 @@ app.post("/register", async (req, res) => {
       return res.status(400).json({ error: "Erro ao obter ID do usuário." });
     }
 
-    // Verifica se usuário já existe na tabela 'users'
-    const { data: existingUsers, error: userCheckError } = await supabase
-      .from("users")
-      .select("id")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (userCheckError) {
-      throw userCheckError;
-    }
-
-    if (existingUsers) {
-      return res
-        .status(400)
-        .json({ error: "Usuário já existe na tabela 'users'." });
-    }
-
-    // Insere na tabela 'users'
-    const { error: dbError } = await supabase.from("users").insert([
+    // Insere apenas o surname na tabela 'users'
+    const { error: insertError } = await supabase.from("users").insert([
       {
-        id: userId,
-        name,
-        surname, // <-- novo campo adicionado
-        phone,
-        email,
+        id: userId, // mantém a referência para possível uso futuro
+        surname: surname, // único campo adicional que queremos salvar
         created_at: new Date(),
       },
     ]);
 
-    if (dbError) {
-      throw dbError;
+    if (insertError) {
+      throw insertError;
     }
 
     res.status(201).json({ message: "Usuário registrado com sucesso!" });
