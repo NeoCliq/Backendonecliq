@@ -206,7 +206,7 @@ app.post("/cadastrar-empresa", async (req, res) => {
 //    "foto": "data:image/png;base64,iVBORw0KGgoAAAANS..."
 // }
 app.put("/profile", async (req, res) => {
-  const { email, name, phone, dataNascimento, foto } = req.body;
+  const { email, name, surname, phone, dataNascimento, foto } = req.body; // ✅ incluiu surname
 
   if (!email) {
     return res.status(400).json({ error: "Email é obrigatório" });
@@ -226,10 +226,10 @@ app.put("/profile", async (req, res) => {
     return res.status(404).json({ error: "Usuário não encontrado" });
   }
 
-  // Atualiza os dados
+  // Atualiza os dados (✅ agora inclui surname)
   const { error } = await supabase
     .from("users")
-    .update({ name, phone, dataNascimento, foto })
+    .update({ name, surname, phone, dataNascimento, foto })
     .eq("email", email);
 
   if (error) {
