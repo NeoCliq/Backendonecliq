@@ -26,15 +26,17 @@ app.post("/login", async (req, res) => {
   res.json(data);
 });
 
-// Rota de cadastro
 app.post("/register", async (req, res) => {
   const { email, password, name, surname } = req.body;
 
   try {
-    // Cria o usuário no Supabase Auth
+    // Cria usuário no Supabase Auth com email e senha
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: { name }, // Salva o nome diretamente em auth.users
+      },
     });
 
     if (authError) {
@@ -47,21 +49,22 @@ app.post("/register", async (req, res) => {
       return res.status(400).json({ error: "Erro ao obter ID do usuário." });
     }
 
-    // Insere apenas o surname na tabela 'users'
-    const { error: insertError } = await supabase.from("users").insert([
+    // Insere apenas o sobrenome na tabela users com o mesmo ID
+    const { error: dbError } = await supabase.from("users").insert([
       {
-        id: userId, // mantém a referência para possível uso futuro
-        surname: surname, // único campo adicional que queremos salvar
+        id: userId,
+        surname,
         created_at: new Date(),
       },
     ]);
 
-    if (insertError) {
-      throw insertError;
+    if (dbError) {
+      throw dbError;
     }
 
     res.status(201).json({ message: "Usuário registrado com sucesso!" });
   } catch (error) {
+    console.error("Erro ao registrar:", error);
     res.status(500).json({ error: error.message });
   }
 });
