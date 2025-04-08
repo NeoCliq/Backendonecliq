@@ -25,17 +25,17 @@ app.post("/login", async (req, res) => {
 
   res.json(data);
 });
-
+// cria rota para cadastro de usuário//
 app.post("/register", async (req, res) => {
   const { email, password, name, surname } = req.body;
 
   try {
-    // Cria usuário no Supabase Auth com email e senha
+    // Cria usuário no Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { name }, // Salva o nome diretamente em auth.users
+        data: { name }, // Salva 'name' no auth.users
       },
     });
 
@@ -49,17 +49,36 @@ app.post("/register", async (req, res) => {
       return res.status(400).json({ error: "Erro ao obter ID do usuário." });
     }
 
-    // Insere apenas o sobrenome na tabela users com o mesmo ID
-    const { error: dbError } = await supabase.from("users").insert([
-      {
-        id: userId,
-        surname,
-        created_at: new Date(),
-      },
-    ]);
+    // Verifica se já existe na tabela users
+    const { data: existing, error: checkError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("id", userId)
+      .maybeSingle();
 
-    if (dbError) {
-      throw dbError;
+    if (checkError) {
+      throw checkError;
+    }
+
+    if (existing) {
+      // Atualiza apenas o surname
+      const { error: updateError } = await supabase
+        .from("users")
+        .update({ surname })
+        .eq("id", userId);
+
+      if (updateError) throw updateError;
+    } else {
+      // Insere novo registro apenas com o surname
+      const { error: insertError } = await supabase.from("users").insert([
+        {
+          id: userId,
+          surname,
+          created_at: new Date(),
+        },
+      ]);
+
+      if (insertError) throw insertError;
     }
 
     res.status(201).json({ message: "Usuário registrado com sucesso!" });
