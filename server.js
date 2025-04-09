@@ -131,70 +131,96 @@ app.get("/profile", async (req, res) => {
 //
 //cadastro empresa
 // Endpoint para cadastro de empresa
-
-// Endpoint para cadastro de empresa com senha
-app.post("/cadastrar-empresa", async (req, res) => {
+// Cadastro de entidade (empresa ou profissional)
+app.post("/entidade", async (req, res) => {
   const {
+    email,
+    password,
     nome,
+    tipo,
+    nome_profissional,
     categoria,
+    especialidades,
     descricao,
+    foto_url,
     endereco,
     cidade,
     bairro,
+    atende_online,
+    forma_atendimento,
+    horarios,
+    local_fixo,
     telefone,
-    email,
-    atendimento,
-    politica_cancelamento,
-    senha, // Senha fornecida pelo frontend
+    redes_sociais,
+    metodos_pagamento,
+    cnpj,
+    fotos_estrutura,
+    planos_assinatura,
+    formacao,
+    experiencia,
+    documento,
+    certificado_url,
+    permite_avaliacoes,
+    termos_aceitos,
   } = req.body;
 
   try {
-    // Cadastrar usuário no Supabase Auth
+    // 1. Cria usuário no auth.users
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
-      password: senha,
+      password,
+      options: {
+        data: { name: nome }, // Salva nome como "Display Name"
+      },
     });
 
-    // Verifica se houve erro ao criar o usuário
-    if (authError) {
-      return res.status(400).json({ error: authError.message });
-    }
+    if (authError) return res.status(400).json({ error: authError.message });
 
-    const userId = authData.user?.id; // ID do usuário criado
+    const user_id = authData.user?.id;
+    if (!user_id)
+      return res.status(500).json({ error: "Erro ao obter ID do usuário." });
 
-    // Se o ID do usuário não for encontrado, retornar erro
-    if (!userId) {
-      return res.status(400).json({ error: "Erro ao obter ID do usuário." });
-    }
-
-    // Inserir empresa na tabela 'entidades' associando com o userId
-    const { data, error } = await supabase.from("entidades").insert([
+    // 2. Insere dados na tabela 'entidades'
+    const { error: insertError } = await supabase.from("entidades").insert([
       {
+        user_id,
+        tipo,
         nome,
+        nome_profissional,
         categoria,
+        especialidades,
         descricao,
+        foto_url,
         endereco,
         cidade,
         bairro,
+        atende_online,
+        forma_atendimento,
+        horarios,
+        local_fixo,
         telefone,
-        email,
-        forma_atendimento: atendimento,
-        politica_cancelamento,
-        tipo: "empresa", // Garantir que seja do tipo 'empresa'
-        user_id: userId, // Associando a empresa ao usuário criado
-        created_at: new Date(),
-        updated_at: new Date(),
+        email, // mesmo email do auth
+        redes_sociais,
+        metodos_pagamento,
+        cnpj,
+        fotos_estrutura,
+        planos_assinatura,
+        formacao,
+        experiencia,
+        documento,
+        certificado_url,
+        permite_avaliacoes,
+        termos_aceitos,
       },
     ]);
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
-    }
+    if (insertError)
+      return res.status(500).json({ error: insertError.message });
 
-    res.status(201).json({ message: "Empresa cadastrada com sucesso!", data });
+    res.status(201).json({ message: "Entidade cadastrada com sucesso!" });
   } catch (err) {
-    console.error("Erro ao cadastrar empresa:", err);
-    res.status(500).json({ error: err.message });
+    console.error("Erro ao cadastrar entidade:", err);
+    res.status(500).json({ error: "Erro interno no servidor." });
   }
 });
 
