@@ -224,6 +224,23 @@ app.post("/entidade", async (req, res) => {
   }
 });
 
+//verifica se o email já tem
+app.post("/verifica-email", async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const { data, error } = await supabase.auth.admin.listUsers({ email });
+
+    if (error) throw error;
+
+    const existe = data.users.length > 0;
+    res.json({ exists: existe });
+  } catch (err) {
+    console.error("Erro Supabase:", err.message);
+    res.status(500).json({ error: "Erro ao verificar e-mail" });
+  }
+});
+
 // Endpoint para atualizar os dados do perfil do usuário
 // Exemplo: PUT https://backen-neocliq.onrender.com/profile
 // Corpo (JSON):
