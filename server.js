@@ -229,11 +229,15 @@ app.post("/verifica-email", async (req, res) => {
   const { email } = req.body;
 
   try {
-    const { data, error } = await supabase.auth.admin.listUsers({ email });
+    const { data: user, error } = await supabase.auth.admin.getUserByEmail(
+      email
+    );
 
-    if (error) throw error;
+    if (error && error.message !== "User not found") {
+      throw error;
+    }
 
-    const existe = data.users.length > 0;
+    const existe = !!user;
     res.json({ exists: existe });
   } catch (err) {
     console.error("Erro Supabase:", err.message);
