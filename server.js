@@ -219,7 +219,7 @@ app.post("/entidade", async (req, res) => {
 
     res
       .status(201)
-      .json({ message: "Entidade cadastrada com sucesso!", authData });
+      .json({ message: "Entidade cadastrada com sucesso!", authData, email });
   } catch (err) {
     console.error("Erro ao cadastrar entidade:", err);
     res.status(500).json({ error: "Erro interno no servidor." });
@@ -231,18 +231,16 @@ app.post("/verifica-email", async (req, res) => {
   const { email } = req.body;
 
   try {
-    const { data: user, error } = await supabase.auth.admin.getUserByEmail(
-      email
-    );
+    const { data, error } = await supabase.auth.admin.listUsers({ email });
 
-    if (error && error.message !== "User not found") {
+    if (error) {
       throw error;
     }
 
-    const existe = !!user;
+    const existe = data.users.length > 0;
     res.json({ exists: existe });
   } catch (err) {
-    console.error("Erro Supabase:", err.message);
+    console.error("Erro ao verificar e-mail:", err.message);
     res.status(500).json({ error: "Erro ao verificar e-mail" });
   }
 });
