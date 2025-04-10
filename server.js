@@ -217,7 +217,9 @@ app.post("/entidade", async (req, res) => {
     if (insertError)
       return res.status(500).json({ error: insertError.message });
 
-    res.status(201).json({ message: "Entidade cadastrada com sucesso!" });
+    res
+      .status(201)
+      .json({ message: "Entidade cadastrada com sucesso!", authData });
   } catch (err) {
     console.error("Erro ao cadastrar entidade:", err);
     res.status(500).json({ error: "Erro interno no servidor." });
