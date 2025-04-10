@@ -75,8 +75,9 @@ app.post("/register", async (req, res) => {
           id: userId,
           name,
           surname,
-          created_at: new Date(),
           tipo,
+
+          created_at: new Date(),
         },
       ]);
 
