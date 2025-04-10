@@ -27,7 +27,7 @@ app.post("/login", async (req, res) => {
 });
 // cria rota para cadastro de usuário//
 app.post("/register", async (req, res) => {
-  const { email, password, name, surname } = req.body;
+  const { email, password, name, surname, tipo } = req.body;
 
   try {
     // Cria usuário no Supabase Auth
@@ -76,6 +76,7 @@ app.post("/register", async (req, res) => {
           name,
           surname,
           created_at: new Date(),
+          tipo,
         },
       ]);
 
