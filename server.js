@@ -221,6 +221,7 @@ app.post("/entidade", async (req, res) => {
     // 3. Adiciona o tipo na tabela 'users'
     const { error: userInsertError } = await supabase.from("users").insert([
       {
+        user_id,
         tipo,
       },
     ]);
