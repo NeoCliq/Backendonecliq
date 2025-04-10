@@ -231,16 +231,19 @@ app.post("/verifica-email", async (req, res) => {
   const { email } = req.body;
 
   try {
-    const { data, error } = await supabase.auth.admin.listUsers({ email });
+    const { data, error } = await supabaseAdmin
+      .from("users") // ou "auth.users" dependendo de como está
+      .select("email")
+      .eq("email", email)
+      .single();
 
-    if (error) {
+    if (error && error.code !== "PGRST116") {
       throw error;
     }
 
-    const existe = data.users.length > 0;
-    res.json({ exists: existe });
+    return res.json({ exists: !!data });
   } catch (err) {
-    console.error("Erro ao verificar e-mail:", err.message);
+    console.error("Erro na verificação de e-mail:", err);
     res.status(500).json({ error: "Erro ao verificar e-mail" });
   }
 });
