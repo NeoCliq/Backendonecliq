@@ -181,6 +181,7 @@ app.post("/entidade", async (req, res) => {
       return res.status(500).json({ error: "Erro ao obter ID do usuário." });
 
     // 2. Insere dados na tabela 'entidades'
+    // 2. Insere dados na tabela 'entidades'
     const { error: insertError } = await supabase.from("entidades").insert([
       {
         user_id,
@@ -199,7 +200,7 @@ app.post("/entidade", async (req, res) => {
         horarios,
         local_fixo,
         telefone,
-        email, // mesmo email do auth
+        email,
         redes_sociais,
         metodos_pagamento,
         cnpj,
@@ -216,6 +217,16 @@ app.post("/entidade", async (req, res) => {
 
     if (insertError)
       return res.status(500).json({ error: insertError.message });
+
+    // 3. Adiciona o tipo na tabela 'users'
+    const { error: userInsertError } = await supabase.from("users").insert([
+      {
+        tipo,
+      },
+    ]);
+
+    if (userInsertError)
+      return res.status(500).json({ error: userInsertError.message });
 
     res
       .status(201)
