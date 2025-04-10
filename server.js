@@ -231,20 +231,21 @@ app.post("/verifica-email", async (req, res) => {
   const { email } = req.body;
 
   try {
-    const { data, error } = await supabaseAdmin
-      .from("users") // ou "auth.users" dependendo de como está
+    const { data, error } = await supabase
+      .from("users") // Consulta a TABELA DE CLIENTES
       .select("email")
       .eq("email", email)
-      .single();
+      .single(); // só queremos um resultado
 
     if (error && error.code !== "PGRST116") {
+      // PGRST116 é "No rows found" — tratamos como "não existe"
       throw error;
     }
 
-    return res.json({ exists: !!data });
+    return res.status(200).json({ exists: !!data });
   } catch (err) {
-    console.error("Erro na verificação de e-mail:", err);
-    res.status(500).json({ error: "Erro ao verificar e-mail" });
+    console.error("Erro ao verificar e-mail:", err);
+    return res.status(500).json({ error: "Erro ao verificar e-mail" });
   }
 });
 
