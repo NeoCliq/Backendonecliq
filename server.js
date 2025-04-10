@@ -64,7 +64,7 @@ app.post("/register", async (req, res) => {
       // Atualiza name e surname se já existir
       const { error: updateError } = await supabase
         .from("users")
-        .update({ name, surname })
+        .update({ name, surname, tipo })
         .eq("id", userId);
 
       if (updateError) throw updateError;
