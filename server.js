@@ -430,6 +430,33 @@ app.post("/agendar", async (req, res) => {
 });
 
 // Rota pública para buscar dados de um profissional (sem precisar de autenticação)
+// Rota para puxar a entidade com base no user_id (usuário autenticado)
+app.get("/entidade/me", async (req, res) => {
+  const { user_id } = req.query;
+
+  if (!user_id) {
+    return res.status(400).json({ error: "user_id é obrigatório" });
+  }
+
+  const { data, error } = await supabase
+    .from("entidades")
+    .select("*")
+    .eq("user_id", user_id)
+    .maybeSingle();
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  if (!data) {
+    return res
+      .status(404)
+      .json({ error: "Entidade não encontrada para esse usuário." });
+  }
+
+  res.json(data);
+});
+
 app.get("/entidade/publica/:id", async (req, res) => {
   const { id } = req.params;
 
