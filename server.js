@@ -356,76 +356,58 @@ app.post("/upload-foto", upload.single("foto"), async (req, res) => {
 //
 //
 //agendamento
-// Endpoint para criar um agendamento
+// Rota para criar um agendamento
 app.post("/agendar", async (req, res) => {
   const {
-    user_id, // ID do usuário (deve ser fornecido ou obtido)
-    entidades_id, // ID da entidade
+    user_id,
+    entidade_id,
+    service_id,
+    data,
+    horario,
+    forma_pagamento,
     nome,
-    email,
     telefone,
-    appointment_date, // Data do agendamento
-    appointment_time, // Hora do agendamento
-    selected_services, // Serviços selecionados
+    email,
   } = req.body;
 
+  // Validação básica
   if (
     !user_id ||
-    !entidades_id ||
-    !selected_services ||
-    selected_services.length === 0
+    !entidade_id ||
+    !service_id ||
+    !data ||
+    !horario ||
+    !forma_pagamento
   ) {
-    return res.status(400).json({
-      error:
-        "Dados inválidos. Certifique-se de fornecer todos os dados necessários.",
-    });
+    return res.status(400).json({ error: "Campos obrigatórios ausentes." });
   }
 
   try {
-    // Inserir o agendamento na tabela 'appointments'
-    const { data, error } = await supabase.from("appointments").insert([
-      {
-        user_id,
-        entidades_id,
-        appointment_date,
-        appointment_time,
-        status: "pendente", // Status inicial pode ser "pendente"
-        nome,
-        email,
-        telefone,
-        payment_method: null, // Se necessário, pode ser modificado
-        created_at: new Date().toISOString(),
-      },
-    ]);
+    const { data: agendamento, error } = await supabase
+      .from("appointments")
+      .insert([
+        {
+          user_id,
+          entidade_id,
+          service_id,
+          data,
+          horario,
+          forma_pagamento,
+          nome,
+          telefone,
+          email,
+        },
+      ]);
 
     if (error) {
-      return res.status(400).json({ error: error.message });
+      console.error("Erro ao agendar:", error);
+      return res.status(500).json({ error: error.message });
     }
 
-    const appointmentId = data[0].id; // ID do agendamento criado
-
-    // Inserir serviços relacionados ao agendamento
-    const { error: servicesError } = await supabase
-      .from("appointments_services")
-      .insert(
-        selected_services.map(serviceId => ({
-          appointment_id: appointmentId,
-          service_id: serviceId,
-        }))
-      );
-
-    if (servicesError) {
-      return res
-        .status(400)
-        .json({ error: "Erro ao associar serviços ao agendamento." });
-    }
-
-    res
-      .status(201)
-      .json({ message: "Agendamento realizado com sucesso!", data });
+    res.status(201).json({ message: "Agendamento criado com sucesso!" });
   } catch (err) {
-    console.error("Erro ao criar agendamento:", err);
-    res.status(500).json({ error: err.message });
+    console.error("Erro interno:", err);
+    res.status(500).json({ error: "Erro interno ao criar agendamento." });
   }
 });
 
