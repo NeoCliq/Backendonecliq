@@ -504,3 +504,28 @@ app.get("/entidade/publica/:id", async (req, res) => {
 
   res.json(resposta);
 });
+
+// Lista todas as entidades
+app.get("/entidade", async (req, res) => {
+  try {
+    const { data, error } = await supabase.from("entidades").select("*");
+    if (error) return res.status(500).json({ error: error.message });
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Puxa os dados de uma entidade pelo ID
+app.get("/entidade/:id", async (req, res) => {
+  const { id } = req.params;
+
+  const { data, error } = await supabase
+    .from("entidades")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
