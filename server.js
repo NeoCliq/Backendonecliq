@@ -428,3 +428,52 @@ app.post("/agendar", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Rota pública para buscar dados de um profissional (sem precisar de autenticação)
+app.get("/entidade/publica/:id", async (req, res) => {
+  const { id } = req.params;
+
+  // Consulta a tabela de entidades com tipo "profissional"
+  const { data, error } = await supabase
+    .from("entidades")
+    .select(
+      `
+      nome,
+      nome_profissional,
+      formacao,
+      profissao,
+      especialidades,
+      endereco,
+      cidade,
+      bairro,
+      maps
+    `
+    )
+    .eq("id", id)
+    .eq("tipo", "profissional")
+    .maybeSingle();
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  if (!data) {
+    return res.status(404).json({ error: "Profissional não encontrado." });
+  }
+
+  // Preferência por nome_profissional e formacao
+  const nomeFinal = data.nome_profissional || data.nome;
+  const formacaoFinal = data.formacao || data.profissao;
+
+  const resposta = {
+    nome: nomeFinal,
+    formacao: formacaoFinal,
+    especialidades: data.especialidades,
+    endereco: data.endereco,
+    cidade: data.cidade,
+    bairro: data.bairro,
+    maps: data.maps,
+  };
+
+  res.json(resposta);
+});
