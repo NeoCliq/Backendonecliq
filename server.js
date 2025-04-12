@@ -526,3 +526,44 @@ app.get("/entidade/:id", async (req, res) => {
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
 });
+
+//
+//
+//Mostrar os agendamento de cada usuário no front
+
+app.get("/agendamentos/:userId", async (req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  const userIdParam = req.params.userId;
+
+  if (!token) {
+    return res.status(401).json({ error: "Token não fornecido." });
+  }
+
+  // Verifica o token no Supabase
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser(token);
+
+  if (error || !user) {
+    return res.status(401).json({ error: "Token inválido ou expirado." });
+  }
+
+  // Garante que o user está acessando apenas seus próprios dados
+  if (user.id !== userIdParam) {
+    return res.status(403).json({ error: "Acesso não autorizado." });
+  }
+
+  // Consulta segura
+  const { data: agendamentos, error: queryError } = await supabase
+    .from("appointments")
+    .select("*")
+    .eq("user_id", userIdParam)
+    .order("data", { ascending: false });
+
+  if (queryError) {
+    return res.status(500).json({ error: "Erro ao buscar agendamentos." });
+  }
+
+  res.json(agendamentos);
+});
