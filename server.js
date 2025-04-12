@@ -382,10 +382,7 @@ app.post("/agendar", async (req, res) => {
     email,
   });
 
-  if (
-    (!user_id || !entidade_id || !service_id || null,
-    !data || !horario || !forma_pagamento)
-  ) {
+  if (!user_id || !entidade_id || !data || !horario || !forma_pagamento) {
     console.warn("❗Campos obrigatórios faltando");
     return res.status(400).json({ error: "Campos obrigatórios ausentes." });
   }
