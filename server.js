@@ -358,6 +358,8 @@ app.post("/upload-foto", upload.single("foto"), async (req, res) => {
 //agendamento
 // Rota para criar um agendamento
 app.post("/agendar", async (req, res) => {
+  console.log("📩 Dados recebidos para agendamento:", req.body); // <-- log útil
+
   const {
     user_id,
     entidade_id,
@@ -400,13 +402,13 @@ app.post("/agendar", async (req, res) => {
       ]);
 
     if (error) {
-      console.error("Erro ao agendar:", error);
+      console.error("🚫 Erro ao agendar:", error); // <-- erro detalhado aqui
       return res.status(500).json({ error: error.message });
     }
 
     res.status(201).json({ message: "Agendamento criado com sucesso!" });
   } catch (err) {
-    console.error("Erro interno:", err);
+    console.error("🔥 Erro interno:", err);
     res.status(500).json({ error: "Erro interno ao criar agendamento." });
   }
 });
