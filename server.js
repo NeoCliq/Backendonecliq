@@ -387,23 +387,28 @@ app.post("/agendar", async (req, res) => {
     return res.status(400).json({ error: "Campos obrigatórios ausentes." });
   }
 
+  // 👇 Cria o payload dinamicamente
+  const payload = {
+    user_id,
+    entidade_id,
+    data,
+    horario,
+    forma_pagamento,
+    nome,
+    telefone,
+    email,
+  };
+
+  // 👇 Adiciona service_id só se for válido (UUID de 36 caracteres)
+  if (service_id && /^[0-9a-fA-F-]{36}$/.test(service_id)) {
+    payload.service_id = service_id;
+  }
+
   try {
     const { data: agendamento, error } = await supabase
       .from("appointments")
-      .insert([
-        {
-          user_id,
-          entidade_id,
-          service_id,
-          data,
-          horario,
-          forma_pagamento,
-          nome,
-          telefone,
-          email,
-        },
-      ])
-      .select(); // Adiciona isso pra ver o retorno
+      .insert([payload])
+      .select();
 
     if (error) {
       console.error("❌ Erro do Supabase:", error);
