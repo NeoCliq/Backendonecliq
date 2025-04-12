@@ -358,8 +358,6 @@ app.post("/upload-foto", upload.single("foto"), async (req, res) => {
 //agendamento
 // Rota para criar um agendamento
 app.post("/agendar", async (req, res) => {
-  console.log("📩 Dados recebidos para agendamento:", req.body);
-
   const {
     user_id,
     entidade_id,
@@ -372,6 +370,18 @@ app.post("/agendar", async (req, res) => {
     email,
   } = req.body;
 
+  console.log("📥 Agendamento recebido:", {
+    user_id,
+    entidade_id,
+    service_id,
+    data,
+    horario,
+    forma_pagamento,
+    nome,
+    telefone,
+    email,
+  });
+
   if (
     !user_id ||
     !entidade_id ||
@@ -380,7 +390,7 @@ app.post("/agendar", async (req, res) => {
     !horario ||
     !forma_pagamento
   ) {
-    console.warn("⚠️ Campos obrigatórios ausentes");
+    console.warn("❗Campos obrigatórios faltando");
     return res.status(400).json({ error: "Campos obrigatórios ausentes." });
   }
 
@@ -399,14 +409,17 @@ app.post("/agendar", async (req, res) => {
           telefone,
           email,
         },
-      ]);
+      ])
+      .select(); // Adiciona isso pra ver o retorno
 
     if (error) {
-      console.error("🚫 Erro ao inserir no Supabase:", error);
+      console.error("❌ Erro do Supabase:", error);
       return res
         .status(500)
         .json({ error: error.message || "Erro desconhecido ao inserir." });
     }
+
+    console.log("✅ Agendamento inserido:", agendamento);
 
     res.status(201).json({ message: "Agendamento criado com sucesso!" });
   } catch (err) {
