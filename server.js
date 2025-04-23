@@ -16,35 +16,25 @@ const supabase = createClient(
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
-  // Verifica se o e-mail existe antes de tentar login
-  const { data: users, error: fetchError } = await supabase
-    .from("users") // ou "auth.users" se estiver tentando acessar o schema de autenticação diretamente (pode dar erro, veja observação abaixo)
-    .select("email")
-    .eq("email", email);
-
-  if (fetchError) {
-    return res.status(500).json({ error: "Erro ao verificar o e-mail." });
-  }
-
-  if (!users || users.length === 0) {
-    return res.status(404).json({ error: "no user" }); // <- identificável no frontend
-  }
-
-  // Tenta login
+  // Tenta login diretamente
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
   if (error) {
-    // Verifica se é erro por e-mail não confirmado
-    if (error.message.toLowerCase().includes("email not confirmed")) {
+    const msg = error.message.toLowerCase();
+
+    // E-mail não confirmado
+    if (msg.includes("email not confirmed")) {
       return res.status(403).json({ error: "email not confirmed" });
     }
 
-    return res.status(401).json({ error: "invalid password" }); // <- senha errada
+    // E-mail não existe ou senha incorreta (não tem como distinguir com certeza)
+    return res.status(401).json({ error: "invalid credentials" });
   }
 
+  // Login OK
   res.json(data);
 });
 
