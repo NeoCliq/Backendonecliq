@@ -17,7 +17,7 @@ const { email, password } = req.body;
 
 // Verifica se o e-mail existe antes de tentar login
 const { data: users, error: fetchError } = await supabase
-  .from("auth.users")
+  .from("users")
   .select("email")
   .eq("email", email);
 
