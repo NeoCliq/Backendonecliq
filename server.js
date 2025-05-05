@@ -591,7 +591,7 @@ app.get("/entidade/servicos/:entidadeId", async (req, res) => {
     .from("services") // Nome da tabela no banco de dados
     .select("*") // Seleciona todos os campos da tabela "services"
     .eq("entidade_id", entidadeId) // Filtra pelo `entidade_id` que foi passado na URL
-    .order("created", { ascending: false }); // Ordena pela data de criação, se necessário
+    .order("created_at", { ascending: false }); // Ordena pela data de criação, se necessário
 
   // Se houver erro na consulta, retorna um erro 500
   if (error) {
