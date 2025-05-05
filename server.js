@@ -580,3 +580,24 @@ app.get("/agendamentos/:userId", async (req, res) => {
 
   res.json(agendamentos);
 });
+// Importa as dependências necessárias
+
+// Buscar todos os serviços de uma entidade
+app.get("/entidade/servicos/:entidadeId", async (req, res) => {
+  const { entidadeId } = req.params; // Pega o `entidadeId` da URL da requisição
+
+  // Faz a consulta no Supabase para pegar todos os serviços daquela entidade
+  const { data, error } = await supabase
+    .from("services") // Nome da tabela no banco de dados
+    .select("*") // Seleciona todos os campos da tabela "services"
+    .eq("entidade_id", entidadeId) // Filtra pelo `entidade_id` que foi passado na URL
+    .order("created", { ascending: false }); // Ordena pela data de criação, se necessário
+
+  // Se houver erro na consulta, retorna um erro 500
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  // Caso a consulta seja bem-sucedida, retorna os serviços da entidade
+  res.json(data);
+});
