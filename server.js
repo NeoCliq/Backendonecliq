@@ -601,3 +601,22 @@ app.get("/entidade/servicos/:entidadeId", async (req, res) => {
   // Caso a consulta seja bem-sucedida, retorna os serviços da entidade
   res.json(data);
 });
+
+//essa parte consulta os agendamemto de uma entidade:
+// Buscar horários ocupados de uma entidade
+app.get("/entidade/horarios-ocupados/:entidadeId", async (req, res) => {
+  const { entidadeId } = req.params;
+
+  // Consulta a VIEW 'horarios_ocupados' no Supabase
+  const { data, error } = await supabase
+    .from("horarios_ocupados") // Usa a VIEW segura
+    .select("data, horario") // Apenas os campos expostos pela view
+    .eq("entidade_id", entidadeId)
+    .order("data", { ascending: true }); // Opcional: ordena por data
+
+  if (error) {
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json(data); // Retorna os horários ocupados da entidade
+});
