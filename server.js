@@ -483,7 +483,8 @@ app.get("/entidade/publica/:id", async (req, res) => {
       endereco,
       cidade,
       bairro,
-      maps
+      maps,
+      forma_atendimento
     `
     )
     .eq("id", id)
@@ -510,6 +511,7 @@ app.get("/entidade/publica/:id", async (req, res) => {
     cidade: data.cidade,
     bairro: data.bairro,
     maps: data.maps,
+    forma_atendimento: data.forma_atendimento, // 👈 adicionado aqui
   };
 
   res.json(resposta);
