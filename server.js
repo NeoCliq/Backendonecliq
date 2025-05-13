@@ -374,10 +374,9 @@ app.post("/agendar", async (req, res) => {
   const {
     user_id,
     entidade_id,
-    service_id,
+    service_ids, // array de UUIDs dos serviços
     data,
     horario,
-    forma_pagamento,
     nome,
     telefone,
     email,
@@ -386,51 +385,83 @@ app.post("/agendar", async (req, res) => {
   console.log("📥 Agendamento recebido:", {
     user_id,
     entidade_id,
-    service_id,
+    service_ids,
     data,
     horario,
-    forma_pagamento,
     nome,
     telefone,
     email,
   });
 
-  if (!user_id || !entidade_id || !data || !horario || !forma_pagamento) {
-    console.warn("❗Campos obrigatórios faltando");
-    return res.status(400).json({ error: "Campos obrigatórios ausentes." });
+  // Verificação de campos obrigatórios
+  if (
+    !user_id ||
+    !entidade_id ||
+    !data ||
+    !horario ||
+    !service_ids ||
+    !Array.isArray(service_ids) ||
+    service_ids.length === 0
+  ) {
+    console.warn("❗Campos obrigatórios faltando ou inválidos");
+    return res
+      .status(400)
+      .json({ error: "Campos obrigatórios ausentes ou inválidos." });
   }
 
-  // 👇 Cria o payload dinamicamente
+  // Cria o payload do agendamento
   const payload = {
     user_id,
     entidade_id,
     data,
     horario,
-    forma_pagamento,
     nome,
     telefone,
     email,
   };
 
-  // 👇 Adiciona service_id só se for válido (UUID de 36 caracteres)
-  if (service_id && /^[0-9a-fA-F-]{36}$/.test(service_id)) {
-    payload.service_id = service_id;
-  }
-
   try {
-    const { data: agendamento, error } = await supabase
+    // Inserir agendamento
+    const { data: agendamentoData, error: agendamentoError } = await supabase
       .from("appointments")
       .insert([payload])
-      .select();
+      .select()
+      .single(); // pega um único agendamento
 
-    if (error) {
-      console.error("❌ Erro do Supabase:", error);
-      return res
-        .status(500)
-        .json({ error: error.message || "Erro desconhecido ao inserir." });
+    if (agendamentoError) {
+      console.error("❌ Erro ao inserir agendamento:", agendamentoError);
+      return res.status(500).json({ error: "Erro ao criar agendamento." });
     }
 
-    console.log("✅ Agendamento inserido:", agendamento);
+    const agendamento_id = agendamentoData.id;
+
+    // Cria os relacionamentos com os serviços
+    const servicosRelacionados = service_ids
+      .filter(id => /^[0-9a-fA-F-]{36}$/.test(id)) // valida os UUIDs
+      .map(service_id => ({
+        appointment_id: agendamento_id,
+        service_id,
+      }));
+
+    if (servicosRelacionados.length === 0) {
+      console.warn("⚠️ Nenhum service_id válido fornecido");
+      return res
+        .status(400)
+        .json({ error: "Nenhum serviço válido fornecido." });
+    }
+
+    const { error: servicoError } = await supabase
+      .from("appointment_services")
+      .insert(servicosRelacionados);
+
+    if (servicoError) {
+      console.error("❌ Erro ao inserir serviços:", servicoError);
+      return res
+        .status(500)
+        .json({ error: "Erro ao vincular serviços ao agendamento." });
+    }
+
+    console.log("✅ Agendamento e serviços inseridos com sucesso");
 
     res.status(201).json({ message: "Agendamento criado com sucesso!" });
   } catch (err) {
