@@ -627,6 +627,29 @@ app.get("/agendamentos/:userId", async (req, res) => {
   res.json(agendamentos);
 });
 // Importa as dependências necessárias
+// GET /agendamentos?user_id=xxx
+app.get("/agendamentos", async (req, res) => {
+  const { user_id } = req.query;
+
+  if (!user_id) {
+    return res.status(400).json({ error: "Parâmetro user_id é obrigatório." });
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("appointments")
+      .select("*")
+      .eq("user_id", user_id)
+      .order("data", { ascending: true });
+
+    if (error) throw error;
+
+    res.json(data);
+  } catch (err) {
+    console.error("Erro ao buscar agendamentos:", err);
+    res.status(500).json({ error: "Erro ao buscar agendamentos." });
+  }
+});
 
 // Buscar todos os serviços de uma entidade
 app.get("/entidade/servicos/:entidadeId", async (req, res) => {
