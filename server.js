@@ -603,7 +603,20 @@ app.get("/agendamentos/:userId", async (req, res) => {
   // Consulta segura
   const { data: agendamentos, error: queryError } = await supabase
     .from("appointments")
-    .select("*")
+    .select(
+      `
+    *,
+    entidade:entidade_id (
+      nome,
+      nome_profissional,
+      categoria,
+      profissao,
+      endereco,
+      bairro,
+      cidade
+    )
+  `
+    )
     .eq("user_id", userIdParam)
     .order("data", { ascending: false });
 
