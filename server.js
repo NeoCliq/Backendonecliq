@@ -577,7 +577,7 @@ app.get("/entidade/publica", async (req, res) => {
     )
     .eq("tipo", "profissional")
     .or(
-      `nome.ilike.${buscaLike},nome_profissional.ilike.${buscaLike},formacao.ilike.${buscaLike},profissao.ilike.${buscaLike},especialidades.ilike.${buscaLike},cidade.ilike.${buscaLike},bairro.ilike.${buscaLike}`
+      `nome.ilike.${buscaLike},nome_profissional.ilike.${buscaLike},formacao.ilike.${buscaLike},profissao.ilike.${buscaLike},cidade.ilike.${buscaLike},bairro.ilike.${buscaLike}`
     );
 
   if (error) return res.status(500).json({ error: error.message });
