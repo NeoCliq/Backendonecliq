@@ -498,29 +498,38 @@ app.get("/entidade/me", async (req, res) => {
   res.json(data);
 });
 
-app.get("/entidade/publica/:id", async (req, res) => {
-  const { id } = req.params;
+app.get("/entidade/publica", async (req, res) => {
+  const termo = req.query.busca;
 
-  // Consulta a tabela de entidades com tipo "profissional"
+  if (!termo) {
+    return res.status(400).json({ error: "Parâmetro de busca ausente." });
+  }
+
+  const buscaLike = `%${termo}%`;
+
   const { data, error } = await supabase
     .from("entidades")
     .select(
       `
+      id,
       nome,
       nome_profissional,
       formacao,
       profissao,
       especialidades,
-      endereco,
       cidade,
-      bairro,
-      maps,
-      forma_atendimento
+      bairro
     `
     )
-    .eq("id", id)
-    .eq("tipo", "profissional")
-    .maybeSingle();
+    .eq("tipo", "profissional").or(`
+      nome.ilike.${buscaLike},
+      nome_profissional.ilike.${buscaLike},
+      formacao.ilike.${buscaLike},
+      profissao.ilike.${buscaLike},
+      especialidades.ilike.${buscaLike},
+      cidade.ilike.${buscaLike},
+      bairro.ilike.${buscaLike}
+    `);
 
   if (error) {
     return res.status(500).json({ error: error.message });
