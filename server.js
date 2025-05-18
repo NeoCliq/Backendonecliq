@@ -501,7 +501,6 @@ app.get("/entidade/me", async (req, res) => {
 app.get("/entidade/publica/:id", async (req, res) => {
   const { id } = req.params;
 
-  // Consulta a tabela de entidades com tipo "profissional"
   const { data, error } = await supabase
     .from("entidades")
     .select(
@@ -515,7 +514,8 @@ app.get("/entidade/publica/:id", async (req, res) => {
       cidade,
       bairro,
       maps,
-      forma_atendimento
+      forma_atendimento,
+      foto_url
     `
     )
     .eq("id", id)
@@ -530,7 +530,6 @@ app.get("/entidade/publica/:id", async (req, res) => {
     return res.status(404).json({ error: "Profissional não encontrado." });
   }
 
-  // Preferência por nome_profissional e formacao
   const nomeFinal = data.nome_profissional || data.nome;
   const formacaoFinal = data.formacao || data.profissao;
 
@@ -542,7 +541,8 @@ app.get("/entidade/publica/:id", async (req, res) => {
     cidade: data.cidade,
     bairro: data.bairro,
     maps: data.maps,
-    forma_atendimento: data.forma_atendimento, // 👈 adicionado aqui
+    forma_atendimento: data.forma_atendimento,
+    foto_url: data.foto_url, // ✅ Agora incluído corretamente
   };
 
   res.json(resposta);
@@ -572,7 +572,8 @@ app.get("/entidade/publica", async (req, res) => {
       cidade,
       bairro,
       maps,
-      forma_atendimento
+      forma_atendimento,
+     foto_url
     `
     )
     .eq("tipo", "profissional")
