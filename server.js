@@ -691,3 +691,35 @@ app.get("/entidade/horarios-ocupados/:entidadeId", async (req, res) => {
 
   res.json(data); // Retorna os horários ocupados da entidade
 });
+
+//rota para mensagens
+app.post("/mensagens", async (req, res) => {
+  const { remetente_id, destinatario_id, mensagem } = req.body;
+
+  const { data, error } = await supabase.from("mensagens").insert([
+    {
+      remetente_id,
+      destinatario_id,
+      mensagem,
+    },
+  ]);
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.status(201).json(data[0]);
+});
+
+//rota para conversas
+app.get("/mensagens/:uid1/:uid2", async (req, res) => {
+  const { uid1, uid2 } = req.params;
+
+  const { data, error } = await supabase
+    .from("mensagens")
+    .select("*")
+    .or(
+      `and(remetente_id.eq.${uid1},destinatario_id.eq.${uid2}),and(remetente_id.eq.${uid2},destinatario_id.eq.${uid1})`
+    )
+    .order("criada_em", { ascending: true });
+
+  if (error) return res.status(500).json({ error: error.message });
+  res.json(data);
+});
